@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+	<script type="text/javascript" src="jquery/jquery-3.2.1.min.js"></script>
+
+<title>Insert title here</title>
+<script type="text/javascript">
+
+		/* var xmlHttpRequest ; // 这个是Ajax的核心处理对象，所有的异步处理操作都通过此对象完成 
+		function create() { 	// 定义一个函数，此函数负责创建XMLHttpRequst对象实例 
+			if (window.XMLHttpRequest) { 	// 当前浏览器使用的不是IE 
+				xmlHttpRequest = new XMLHttpRequest() ; 	// 直接实例化对象 
+			} else { // 使用的是IE浏览器 
+				xmlHttpRequest = new ActiveXObject("Microsoft.XMLHttp") ; 
+			} 
+		} 
+		
+		window.onload=function(){
+			loadDept() ;
+		} */
+
+		$(function(){
+			loadDept() ;
+		}) 
+
+		function loadDept(){
+			/*  create() ; 
+			xmlHttpRequest.open("post","DeptServlet/list") ; 	
+			xmlHttpRequest.send(null) ;  	
+			xmlHttpRequest.onreadystatechange = function() {	// 定义信息返回的回调处理函数
+				if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
+					deptObj=eval("("+xmlHttpRequest.responseText+")") ;
+					for(x=0 ; x<deptObj.allDepts.length ; x++){
+						addRow(deptObj.allDepts[x].deptno,deptObj.allDepts[x].dname) ;
+					}
+				}
+			} 
+			 */
+			
+			$.post("DeptServlet/list",function(data){
+				for(x=0 ; x<data.allDepts.length ;x++){
+					addRow(data.allDepts[x].deptno,data.allDepts[x].dname) ;
+				} 
+			},"json") ;
+			
+			/* 
+			document.getElementById("editdept").addEventListener("click",function(){
+				deptnoNewValue=document.getElementById("editdeptno").value ;
+				dnameNewValue=document.getElementById("editdname").value ;
+				create() ; 
+				xmlHttpRequest.open("post","DeptServlet/edit?deptno="+deptnoNewValue+"&dname="+dnameNewValue) ; 	
+				xmlHttpRequest.send(null) ;  	
+				xmlHttpRequest.onreadystatechange = function() {	
+					if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
+						document.getElementById("deptEditDiv").style.display="none" ;
+						if(xmlHttpRequest.responseText.trim()=="true"){
+							document.getElementById("dname-"+deptnoNewValue).innerHTML=dnameNewValue ;
+						}else{
+							alert("修改失败！！") ;
+						}
+					}
+				}
+			},false) ;  */
+			
+			$("#editdept").on("click",function(){
+				deptnoNewValue=$("#editdeptno").val() ;
+				dnameNewValue=$("#editdname").val() ;
+				$.post("DeptServlet/edit",{deptno:deptnoNewValue,dname:dnameNewValue},function(data){
+					if(data.trim()=="true"){
+						$("#dname-"+deptnoNewValue).text(dnameNewValue) ;
+						$(deptEditDiv).css("display","none") ;
+					}else{
+						alert("修改失败！！") ;
+					}
+				},"text") ;
+			}) ;
+			
+			/* document.getElementById("addDept").addEventListener("click",function(){
+				dnameVal=document.getElementById("dname").value ;
+				if(dnameVal!=""){
+					create() ; 
+					xmlHttpRequest.open("post","DeptServlet/add?dname="+dnameVal) ; 	
+					xmlHttpRequest.send(null) ;  	
+					xmlHttpRequest.onreadystatechange = function() {	
+						if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
+							if(xmlHttpRequest.responseText.trim()=="0"){
+								alert("增加失败！！") ;
+							}else{
+								addRow(xmlHttpRequest.responseText.trim(),dnameVal) ;
+								document.getElementById("dname").value="" ;
+							}
+						}
+					}
+				}
+			},false) ; */
+			
+			$("#addDept").on("click",function(){
+				dnameVal=$("#dname").val();
+				if(dnameVal!=""){
+					$.post("DeptServlet/add",{dname:dnameVal},function(data){
+						if(data.trim()=="0"){
+							alert("增加失败！！") ;
+						}else{
+							addRow(data.trim(),dnameVal) ;
+							$("#dname").val("") ;
+						}
+					},"text") ;
+				}
+			}) ;
+		}
+
+		function addRow(deptno,dname){
+			/* deptTableElement=document.getElementById("deptTable") ;
+
+			deptTrElement=document.createElement("tr") ;
+			deptTrElement.setAttribute("id","dept-"+deptno) ;
+			deptnoTdElement=document.createElement("td") ;
+			deptnoTdElement.setAttribute("id","deptno-"+deptno) ;
+			dnameTdElement=document.createElement("td") ;
+			dnameTdElement.setAttribute("id","dname-"+deptno) ;
+			editButTdElement=document.createElement("td") ;
+			deleteButTdElement=document.createElement("td") ;
+
+			deptnoTdElement.appendChild(document.createTextNode(deptno)) ;
+			dnameTdElement.appendChild(document.createTextNode(dname)) ;
+
+			editButElement=document.createElement("button") ;
+			editButElement.setAttribute("id","deptEdit-"+deptno) ;
+			editButElement.appendChild(document.createTextNode("编辑")) ;
+			deleteButElement=document.createElement("button") ;
+			deleteButElement.setAttribute("id","deptDelete-"+deptno) ;
+			deleteButElement.appendChild(document.createTextNode("删除")) ;
+
+			editButTdElement.appendChild(editButElement) ;
+			deleteButTdElement.appendChild(deleteButElement) ;
+
+			deptTrElement.appendChild(deptnoTdElement) ;
+			deptTrElement.appendChild(dnameTdElement) ;
+			deptTrElement.appendChild(editButTdElement) ;
+			deptTrElement.appendChild(deleteButTdElement) ;
+			deptTable.appendChild(deptTrElement) ;
+			
+			editButElement.addEventListener("click",function(){
+				editDeptnoVal=document.getElementById("deptno-"+deptno).firstChild.nodeValue ;
+				editDnameVal=document.getElementById("dname-"+deptno).firstChild.nodeValue ;
+				document.getElementById("editdname").value=editDnameVal ;
+				document.getElementById("editdeptno").value=editDeptnoVal ;
+				document.getElementById("deptEditDiv").style.display="block" ;
+			},false) ;
+			
+			deleteButElement.addEventListener("click",function(){
+				removeRow(deptno)  ;
+			},false) ; */
+			
+			$("#deptTable").append("<tr id=dept-"+deptno+"></tr>") ;
+			$("#dept-"+deptno).append("<td id=deptno-"+deptno+">"+deptno+"</td>") ;
+			$("#dept-"+deptno).append("<td id=dname-"+deptno+">"+dname+"</td>") ;
+			
+			$("#dept-"+deptno).append("<td><button id=deptEdit-"+deptno+">编辑</button></td>") ;
+			$("#dept-"+deptno).append("<td><button id='deptDelete-"+deptno+"'>删除</button></td>") ;
+			
+			$("#deptEdit-"+deptno).on("click",function(){
+				$("#deptEditDiv").css("display","block") ;
+				$("#editdname").val(dname) ;
+				$("#editdeptno").val(deptno) ;
+			}) ;
+			
+			$("#deptDelete-"+deptno).on("click",function(){
+				removeRow(deptno) ;
+			}) ;
+		}
+		
+		function removeRow(deptno){
+			if(window.confirm("确定要删除吗？")){
+				/* create() ; 
+				xmlHttpRequest.open("post","DeptServlet/delete?deptno="+deptno) ; 	
+				xmlHttpRequest.send(null) ;  	
+				xmlHttpRequest.onreadystatechange = function() {	// 定义信息返回的回调处理函数
+					if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
+						if(xmlHttpRequest.responseText.trim()=="true"){
+							deptTrElement=document.getElementById("dept-"+deptno) ;
+							deptTrElement.parentNode.removeChild(deptTrElement) ;
+						}else{
+							alert("删除失败？") ;
+						}
+					}
+				} */
+				
+				$.post("DeptServlet/delete",{deptno:deptno},function(data){
+					if(data.trim()=="true"){
+						$("#dept-"+deptno).remove() ;
+					}else{
+						alert("删除失败！！") ;
+					}
+				},"text") ;
+			}
+		}
+	</script>
+</head>
+<body>
+	<table border="1" id="deptTable">
+		<tr>
+			<td>部门编号</td>
+			<td>部门名称</td>
+			<td colspan="2">操作</td>
+		</tr>
+	</table>
+	<div id="deptEditDiv" style="display:none">
+		<input type="text" id="editdname" name="editname" value="">
+		<input type="hidden" id="editdeptno" name="editdeptno" value="">
+		<input type="button" id="editdept" value="修改">
+	</div>
+	<div id="deptForm">
+		部门名称：<input type="text" id="dname" name="dname">
+		<input type="button" id="addDept" value="增加部门">
+	</div>
+</body>
+</html>
